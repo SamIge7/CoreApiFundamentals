@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CoreCodeCamp.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -11,10 +13,26 @@ namespace CoreCodeCamp.Controllers
     [Route("api/[controller]")]
     public class CampsController : ControllerBase
     {
-       [HttpGet]
-       public IActionResult Get()
+        private readonly ICampRepository _repository;
+
+        public CampsController(ICampRepository repository)
         {
-            return Ok (new { Moniker = "LDN2020", Name = "London Code Camp" });
+            _repository = repository;
+        }
+
+       [HttpGet]
+       public async Task<IActionResult> Get()
+        {
+            try
+            {
+                var results = await _repository.GetAllCampsAsync();
+
+                return Ok(results);
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Database failure");
+            }
         }
     }
 }
