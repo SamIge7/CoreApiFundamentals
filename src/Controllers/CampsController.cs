@@ -99,7 +99,7 @@ namespace CoreCodeCamp.Controllers
                 _repository.Add(camp);
                 if (await _repository.SaveChangesAsync())
                 {
-                    return Created($"/ap/camps/{camp.Moniker}", _mapper.Map<CampModel>(camp));
+                    return Created($"/api/camps/{camp.Moniker}", _mapper.Map<CampModel>(camp));
                 }
             }
             catch (Exception)
