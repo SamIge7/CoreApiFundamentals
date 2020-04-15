@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CoreCodeCamp.Controllers
 {
     [Route("api/[controller]")]
+    [ApiController]
     public class CampsController : ControllerBase
     {
         private readonly ICampRepository _repository;
@@ -66,6 +67,19 @@ namespace CoreCodeCamp.Controllers
                 if (!results.Any()) return NotFound();
 
                 return _mapper.Map<CampModel[]>(results);
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Database failure");
+            }
+        }
+
+        public async Task<ActionResult<CampModel>>Post(CampModel model)
+        {
+            try
+            {
+                //Create a new Camp
+                return Ok();
             }
             catch (Exception)
             {
