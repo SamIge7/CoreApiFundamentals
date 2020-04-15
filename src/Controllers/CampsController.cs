@@ -7,6 +7,7 @@ using CoreCodeCamp.Data;
 using CoreCodeCamp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -18,11 +19,13 @@ namespace CoreCodeCamp.Controllers
     {
         private readonly ICampRepository _repository;
         private readonly IMapper _mapper;
+        private readonly LinkGenerator _linkGenerator;
 
-        public CampsController(ICampRepository repository, IMapper mapper)
+        public CampsController(ICampRepository repository, IMapper mapper, LinkGenerator linkGenerator)
         {
             _repository = repository;
             _mapper = mapper;
+            _linkGenerator = linkGenerator;
         }
 
        [HttpGet]
@@ -74,17 +77,37 @@ namespace CoreCodeCamp.Controllers
             }
         }
 
-        public async Task<ActionResult<CampModel>>Post(CampModel model)
+        public async Task<ActionResult<CampModel>> Post(CampModel model)
         {
             try
             {
+                var existingcamp = await _repository.GetCampAsync(model.Moniker);
+                if (existingcamp != null)
+                {
+                    return BadRequest("Moniker is being used, create a new one");
+                }
+
+                var location = _linkGenerator.GetPathByAction("Get", "Camps", new { moniker = model.Moniker});
+
+                if (string.IsNullOrWhiteSpace(location))
+                {
+                    return BadRequest("Could not use current moniker");
+                }
+
                 //Create a new Camp
-                return Ok();
+                var camp = _mapper.Map<Camp>(model);
+                _repository.Add(camp);
+                if (await _repository.SaveChangesAsync())
+                {
+                    return Created($"/ap/camps/{camp.Moniker}", _mapper.Map<CampModel>(camp));
+                }
             }
             catch (Exception)
             {
                 return this.StatusCode(StatusCodes.Status500InternalServerError, "Database failure");
             }
+
+            return BadRequest();
         }
     }
 }
