@@ -81,8 +81,8 @@ namespace CoreCodeCamp.Controllers
         {
             try
             {
-                var existingcamp = await _repository.GetCampAsync(model.Moniker);
-                if (existingcamp != null)
+                var existingCamp = await _repository.GetCampAsync(model.Moniker);
+                if (existingCamp != null)
                 {
                     return BadRequest("Moniker is being used, create a new one");
                 }
@@ -100,6 +100,29 @@ namespace CoreCodeCamp.Controllers
                 if (await _repository.SaveChangesAsync())
                 {
                     return Created($"/ap/camps/{camp.Moniker}", _mapper.Map<CampModel>(camp));
+                }
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Database failure");
+            }
+
+            return BadRequest();
+        }
+
+        [HttpPut("{moniker}")]
+        public async Task<ActionResult<CampModel>> Put(string moniker, CampModel model)
+        {
+            try
+            {
+                var oldCamp = await _repository.GetCampAsync(moniker);
+                if (oldCamp == null) return NotFound($"Could not find camp with moniker {moniker}");
+
+                _mapper.Map(model, oldCamp);
+
+                if (await _repository.SaveChangesAsync())
+                {
+                    return _mapper.Map<CampModel>(oldCamp);
                 }
             }
             catch (Exception)
