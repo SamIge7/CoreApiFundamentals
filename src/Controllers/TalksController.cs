@@ -127,5 +127,30 @@ namespace CoreCodeCamp.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Failed to get talks");
             }
         }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(string moniker, int id)
+        {
+            try
+            {
+                var deleteTalk = await _repository.GetTalkByMonikerAsync(moniker, id);
+                if (deleteTalk == null) return NotFound("Couldn't find talk");
+
+                _repository.Delete(deleteTalk);
+
+                if (await _repository.SaveChangesAsync())
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return BadRequest("Failed to delete talk");
+                }
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Failed to get talk");
+            }
+        }
     }
 }
